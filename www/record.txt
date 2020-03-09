@@ -1,0 +1,149 @@
+开发日志(按照廖雪峰Python教程实战来划分)
+
+day 1 配置环境：
+    Python版本为3.7.3(Anaconda3 2019.03) 配置VS Code的Python运行环境 配置git相关
+    用pip3命令安装所需第三方库aiohttp、jinja2、aiomysql
+    安装配置mysql
+    建立项目目录结构
+
+day 2 编写web app骨架(简单实现交互，添加app.py，添加markdown2.py，添加favicon.ico)
+    aiohttp是基于asyncio实现的HTTP框架
+    简单的利用aiohttp包编写简单的web app骨架，实现访问
+
+day 3 编写orm(添加orm.py)
+    ORM,即对象关系映射,用于建立类与数据库表的映射
+    对数据库进行操作，与数据库有直接交互
+    编写模板类，所有需要的表都可以通过继承模板类生成一个类，表中的一行作为一个实例，字段为实例的属性
+    对数据库进行的操作封装为类方法
+
+day 4 编写model，利用sql脚本创建数据库(添加models.py 添加schema.sql)
+    编写需要的类(即需要的数据库中的表)，从orm中继承而来
+    其实就是定义表中的每一字段(即"列")，字段(列)的名字和值域
+    还可以给字段设定"默认值"，比如User的id的生成方式(唯一)，比如创建时间(根据实际时间)
+    编写schema.sql(sql脚本)，利用脚本在mysql中初始化数据库(建用户、建数据库、建表)
+
+day 5 编写web框架(添加webframe.py 扩充app.py)
+    webframe:
+    基于aiohttp的web框架，进一步简化Web开发
+    aiohttp相对比较底层，想要使用框架时编写更少的代码，就只能在aiohttp框架上封装一个更高级的框架
+    Web框架的设计是完全从使用者出发，目的是让框架使用者编写尽可能少的代码
+    1.用装饰器将函数映射为url处理函数
+    2.URL处理函数不一定是一个coroutine，因此用RequestHandler()来封装一个URL处理函数。
+      RequestHandler是一个类，由于定义了__call__()方法，因此可以将其实例视为函数。
+      RequestHandler目的就是从URL函数中分析其需要接收的参数，从request中获取必要的参数，
+      从handlers.py中调用URL函数处理request，然后通过中间件把结果转换为web.Response对象，
+      这样，就完全符合aiohttp框架的要求。
+    3.添加静态文件
+    4.添加url注册函数
+    app:
+    初始化jinja2模板，配置jinja2环境
+    添加一些middlewares(中间件)，在url处理函数之前或者之后增加一些操作(比在之前如记录日志)
+
+day 6 编写配置文件(添加config_default.py 添加config_override.py 添加config.py)
+    编写三个配置文件dedault、override与主配置文件config
+    自定义的配置文件override用以覆盖一些默认配置,从而避免了对默认配置文件的直接修改,即：
+    可以把config_default.py作为开发环境的标准配置，把config_override.py作为生产环境的标准配置，
+    这样坐可以既方便地在本地开发，又可以随时把应用部署到服务器上
+    在主配置文件config.py中对二者进行混合，用override的配置覆盖一些默认配置
+
+day 7 编写MVC(添加handlers.py)
+    MVC全名是Model View Controller，是模型(model)－视图(view)－控制器(controller)的缩写，
+    一种软件设计典范，用一种业务逻辑、数据、界面显示分离的方法组织代码，将业务逻辑聚集到一个部件里面，
+    在改进和个性化定制界面及用户交互的同时，不需要重新编写业务逻辑。
+    在handlers中只定义了对主页面'/'的url处理函数，只是初步的跑通了一个最简单的MVC
+    (在初步测试的时候遇到了各种各样导致请求失败的问题，索性都不是大问题，码代码要认真，调BUG找错能力upup)
+
+day 8 构建前端(在static目录添加静态文件，即uikit这个强大的CSS框架，添加__base__.html blogs.html)
+    uikit具备完善的响应式布局，漂亮的UI，以及丰富的HTML组件，让我们能轻松设计出美观而简洁的页面。
+    这部分涉及到前端的知识,html语法之类的
+    完成了最基础的模板__base__.html,以及一个基本模板blogs.html
+    由于前端页面肯定不止首页一个页面，每个页面都有相同的页眉和页脚。如果每个页面都是独立的HTML模板，
+    那么在修改页眉和页脚的时候，就需要把每个模板都改一遍，这显然是没有效率的。
+    常见的模板引擎已经考虑到了页面上重复的HTML部分的复用问题。有的模板通过include把页面拆成三部分，
+    相同的部分可以共享。
+    但是include方法不利于页面整体结构的维护。jinjia2的模板还有另一种“继承”方式，实现模板的复用更简单。
+    “继承”模板的方式是通过编写一个“父模板”，在父模板中定义一些可替换的block（块）。
+    然后，编写多个“子模板”，每个子模板都可以只替换父模板定义的block。
+
+day 9 编写API(简单修改handlers.py)
+    API就是把Web App的功能全部封装了，所以，通过API操作数据，可以极大地把前端和后端的代码隔离，
+    使得后端代码易于测试，前端代码编写更简单。一个API也是一个URL的处理函数。
+    在handlers.py中加入了简单的获取注册用户的API，实现了这个简单的API
+
+day 10 用户注册和登陆(修改app.py添加将用户绑定到request的装饰器，修改handlers添加用户注册、登陆)
+                    (添加register.html 添加singin.html)
+    主要是添加了用户注册与用户登陆的业务逻辑与相应页面
+    用户登录比用户注册复杂。由于HTTP协议是一种无状态协议，而服务器要跟踪用户状态，就只能通过cookie实现。
+    大多数Web框架提供了Session功能来封装保存用户状态的cookie。
+    Session的优点是简单易用，可以直接从Session中取出用户登录信息。
+    Session的缺点是服务器需要在内存中维护一个映射表来存储用户登录信息，如果有两台以上服务器，
+    就需要对Session做集群，因此，使用Session的Web App很难扩展。
+    因此使用直接读取cookie的方式来验证用户登录，每次用户访问任意URL，都会对cookie进行验证，
+    这种方式的好处是保证服务器处理任意的URL都是无状态的，可以扩展到多台服务器。
+    由于登录成功后是由服务器生成一个cookie发送给浏览器，所以，要保证这个cookie不会被客户端伪造出来。
+    实现防伪造cookie的关键是通过一个单向算法（例如SHA1）
+
+day 11 编写日志创建页(修改handlers.py 添加manage_blog_edit.html)
+    在handlers中添加了创建博客的业务逻辑
+    Web开发真正困难的地方在于编写前端页面。前端页面需要混合HTML、CSS和JavaScript，
+    如果对这三者没有深入地掌握，编写的前端页面将很快难以维护。
+    更大的问题在于，前端页面通常是动态页面，也就是说，前端页面往往是由后端代码生成的。
+    生成前端页面最早的方式是拼接字符串，显然这种方式完全不具备可维护性。
+    所以有第二种模板方式，ASP、JSP、PHP等都是用这种模板方式生成前端页面。
+    如果在页面上大量使用JavaScript(事实上大部分页面都会),模板方式仍然会导致JavaScript代码与后端代码绑得非常紧密,
+    以至于难以维护。其根本原因在于负责显示的HTML DOM模型与负责数据和交互的JavaScript代码没有分割清楚。
+    要编写可维护的前端代码绝非易事。和后端结合的MVC模式已经无法满足复杂页面逻辑的需要了，
+    所以，新的MVVM：Model View ViewModel模式应运而生。
+    在前端页面中，把Model用纯JavaScript对象表示，View是纯HTML。
+    由于Model表示数据，View负责显示，两者做到了最大限度的分离。把Model和View关联起来的就是ViewModel。
+    ViewModel负责把Model的数据同步到View显示出来，还负责把View的修改同步回Model。
+    ViewModel如何编写？需要用JavaScript编写一个通用的ViewModel，这样，就可以复用整个MVVM模型了。
+    已有许多成熟的MVVM框架，例如AngularJS，KnockoutJS等。
+    这里选择Vue这个简单易用的MVVM框架来实现创建Blog的页面templates/manage_blog_edit.html
+
+day 12 编写日志列表页(修改api.py 修改handlers.py 添加manage_blogs.html)
+    在api.py中添加用储存分页信息的类page
+    在handlers.py中实现API，即显示日志与管理日志相关的业务逻辑
+    添加日志管理页面manage_blogs.html
+
+day 13 提高开发效率(添加 pymonitor.py)
+    Python的第三方库watchdog可以利用操作系统的API来监控目录文件的变化，并发送通知。用pip安装
+    实现Debug模式的自动重新加载
+    检测www目录下的代码改动，一旦有改动，就自动重启服务器
+    相当于一个自动化脚本
+    用下面的命令启动服务器：$ python3 pymonitor.py wsgiapp.py
+    或者给pymonitor.py加上可执行权限，启动服务器：$ ./pymonitor.py app.py
+    只要一保存代码，就可以刷新浏览器看到效果，大大提升开发效率。
+
+day 14 完成web app(修改handlers.py)
+    在Web App框架和基本流程跑通后，剩下的工作全部是体力活了：
+    在Debug开发模式下完成后端所有API、前端所有页面。需要做的事情包括：
+    把当前用户绑定到request上，并对URL/manage/进行拦截，检查当前用户是否是管理员身份
+    后端API包括：
+    获取日志：GET /api/blogs
+    创建日志：POST /api/blogs
+    修改日志：POST /api/blogs/:blog_id
+    删除日志：POST /api/blogs/:blog_id/delete
+    获取评论：GET /api/comments
+    创建评论：POST /api/blogs/:blog_id/comments
+    删除评论：POST /api/comments/:comment_id/delete
+    创建新用户：POST /api/users
+    获取用户：GET /api/users
+    管理页面包括：
+    评论列表页：GET /manage/comments
+    日志列表页：GET /manage/blogs
+    创建日志页：GET /manage/blogs/create
+    修改日志页：GET /manage/blogs/
+    用户列表页：GET /manage/users
+    用户浏览页面包括：
+    注册页：GET /register
+    登录页：GET /signin
+    注销页：GET /signout
+    首页：GET /
+    日志详情页：GET /blog/:blog_id
+    把所有的功能实现，第一个Web App就宣告完成！
+
+day 15 部署webapp
+    部署到服务器
+
+day 16 编写移动app
